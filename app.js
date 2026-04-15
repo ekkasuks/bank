@@ -4,7 +4,7 @@
    ============================================= */
 
 // -------- STATE --------
-let GAS_URL = localStorage.getItem('gas_url') || '';
+let GAS_URL = localStorage.getItem('gas_url') || 'https://script.google.com/macros/s/AKfycbwySJbG6rm6BP5fq4QhTC3R9XVlIfTIxTxE_Ckvh6MAzfTOTKl-t664wcVwm0mIDS4/exec';
 let students = JSON.parse(localStorage.getItem('students') || '[]');
 let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
 let chartBar = null;
