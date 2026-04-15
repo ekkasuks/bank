@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบฝากเงินนักเรียน — โรงเรียนบ้านใหม่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">฿</div>
+    <div>
+      <div class="logo-title">ออมทรัพย์</div>
+      <div class="logo-sub">ระบบฝากเงินนักเรียน</div>
+    </div>
+  </div>
+  <nav class="nav-menu">
+    <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+      <span class="nav-icon">⊞</span> หน้าหลัก
+    </a>
+    <a class="nav-item" data-page="deposit" onclick="showPage('deposit')">
+      <span class="nav-icon">↓</span> ฝาก / ถอน
+    </a>
+    <a class="nav-item" data-page="students" onclick="showPage('students')">
+      <span class="nav-icon">◉</span> จัดการนักเรียน
+    </a>
+    <a class="nav-item" data-page="report" onclick="showPage('report')">
+      <span class="nav-icon">▦</span> รายงาน
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-settings" onclick="showSettings()">⚙ ตั้งค่าการเชื่อมต่อ</button>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="topbar-title" id="pageTitle">หน้าหลัก</div>
+    <div class="topbar-right">
+      <span class="sync-status" id="syncStatus">
+        <span class="dot dot-gray"></span> ยังไม่เชื่อมต่อ
+      </span>
+      <button class="btn-sync" onclick="syncData()">⟳ ซิงค์ข้อมูล</button>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: DASHBOARD ===== -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header">
+      <h1>ภาพรวมระบบ</h1>
+      <div class="filter-bar">
+        <select id="dashFilterClass" onchange="renderDashboard()">
+          <option value="">— ทุกชั้นเรียน —</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card accent-green">
+        <div class="stat-label">ยอดออมทั้งหมด</div>
+        <div class="stat-value" id="statTotal">฿0</div>
+      </div>
+      <div class="stat-card accent-blue">
+        <div class="stat-label">จำนวนนักเรียน</div>
+        <div class="stat-value" id="statStudents">0 คน</div>
+      </div>
+      <div class="stat-card accent-yellow">
+        <div class="stat-label">รายการเดือนนี้</div>
+        <div class="stat-value" id="statMonthTx">0 ครั้ง</div>
+      </div>
+      <div class="stat-card accent-purple">
+        <div class="stat-label">ออมสูงสุด</div>
+        <div class="stat-value" id="statTopSaver">—</div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="card chart-card">
+        <div class="card-header">ยอดเงินรายบุคคล (เรียงจากมากไปน้อย)</div>
+        <div class="chart-scroll">
+          <canvas id="chartBar" height="260"></canvas>
+        </div>
+      </div>
+      <div class="card chart-card chart-card-sm">
+        <div class="card-header">สรุปรายเดือน (จำนวนครั้งฝาก)</div>
+        <canvas id="chartLine" height="260"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">รายการล่าสุด</div>
+      <table class="data-table" id="recentTable">
+        <thead><tr>
+          <th>วันที่</th><th>ชั้น</th><th>เลขประจำตัว</th>
+          <th>ชื่อ-นามสกุล</th><th>ประเภท</th><th>จำนวน</th><th>ยอดคงเหลือ</th>
+        </tr></thead>
+        <tbody id="recentTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: DEPOSIT ===== -->
+  <div id="page-deposit" class="page">
+    <div class="page-header">
+      <h1>ฝาก / ถอนเงิน</h1>
+    </div>
+    <div class="two-col">
+      <div class="card form-card">
+        <div class="card-header">บันทึกรายการ</div>
+        <div class="form-body">
+          <div class="form-group">
+            <label>เลือกชั้นเรียน</label>
+            <select id="txClass" onchange="filterStudentDropdown()">
+              <option value="">— เลือกชั้น —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>นักเรียน</label>
+            <select id="txStudent">
+              <option value="">— เลือกนักเรียน —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ประเภท</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="txType" value="deposit" checked> ฝาก
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="txType" value="withdraw"> ถอน
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>จำนวนเงิน (บาท)</label>
+            <input type="number" id="txAmount" placeholder="0.00" min="1">
+          </div>
+          <div class="form-group">
+            <label>วันที่</label>
+            <input type="date" id="txDate">
+          </div>
+          <div class="form-group">
+            <label>หมายเหตุ</label>
+            <input type="text" id="txNote" placeholder="(ไม่บังคับ)">
+          </div>
+          <button class="btn-primary btn-full" onclick="submitTransaction()">
+            บันทึกรายการ
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">ประวัติรายการ
+          <input type="text" id="txSearch" placeholder="ค้นหาชื่อ..." class="search-inline" oninput="renderTransactions()">
+        </div>
+        <table class="data-table" id="txTable">
+          <thead><tr>
+            <th>วันที่</th><th>ชั้น</th><th>ชื่อ</th>
+            <th>ประเภท</th><th>จำนวน</th><th>ยอดคงเหลือ</th><th></th>
+          </tr></thead>
+          <tbody id="txTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: STUDENTS ===== -->
+  <div id="page-students" class="page">
+    <div class="page-header">
+      <h1>จัดการนักเรียน</h1>
+      <button class="btn-primary" onclick="openStudentModal()">+ เพิ่มนักเรียน</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        รายชื่อนักเรียน
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="studentFilterClass" onchange="renderStudentsTable()">
+            <option value="">— ทุกชั้น —</option>
+          </select>
+          <input type="text" id="studentSearch" placeholder="ค้นหา..." class="search-inline" oninput="renderStudentsTable()">
+        </div>
+      </div>
+      <table class="data-table">
+        <thead><tr>
+          <th>ชั้น</th><th>เลขประจำตัว</th><th>ชื่อ-นามสกุล</th>
+          <th>ยอดคงเหลือ</th><th>ครั้งที่ฝาก</th><th>รายการล่าสุด</th><th>จัดการ</th>
+        </tr></thead>
+        <tbody id="studentTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== PAGE: REPORT ===== -->
+  <div id="page-report" class="page">
+    <div class="page-header">
+      <h1>รายงาน</h1>
+      <div style="display:flex;gap:8px">
+        <select id="reportMonth">
+          <option value="">— ทุกเดือน —</option>
+        </select>
+        <select id="reportClass" onchange="renderReport()">
+          <option value="">— ทุกชั้น —</option>
+        </select>
+        <select id="reportStudent" onchange="renderReport()">
+          <option value="">— รายชั้น —</option>
+        </select>
+        <button class="btn-outline" onclick="window.print()">🖨 พิมพ์ / PDF</button>
+      </div>
+    </div>
+
+    <div id="reportContent">
+      <!-- report rendered here -->
+    </div>
+  </div>
+
+</main>
+
+<!-- ===== MODAL: STUDENT ===== -->
+<div class="modal-overlay" id="studentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span id="studentModalTitle">เพิ่มนักเรียน</span>
+      <button class="modal-close" onclick="closeStudentModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>ชั้นเรียน <span class="req">*</span></label>
+        <input type="text" id="sClass" placeholder="เช่น ป.2/1">
+      </div>
+      <div class="form-group">
+        <label>เลขประจำตัว <span class="req">*</span></label>
+        <input type="text" id="sId" placeholder="เช่น 12345">
+      </div>
+      <div class="form-group">
+        <label>ชื่อ <span class="req">*</span></label>
+        <input type="text" id="sFirstName" placeholder="ชื่อ">
+      </div>
+      <div class="form-group">
+        <label>นามสกุล <span class="req">*</span></label>
+        <input type="text" id="sLastName" placeholder="นามสกุล">
+      </div>
+      <input type="hidden" id="sRowIndex">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeStudentModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveStudent()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: SETTINGS ===== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span>ตั้งค่าการเชื่อมต่อ Google Sheets</span>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.7">
+        ระบบนี้ใช้ <strong>Google Apps Script</strong> เป็น Backend<br>
+        กรุณากรอก URL ของ Web App ที่ Deploy แล้ว
+      </p>
+      <div class="form-group">
+        <label>Google Apps Script Web App URL</label>
+        <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <div class="info-box">
+        <strong>วิธีตั้งค่า:</strong><br>
+        1. เปิด Google Sheets → Extensions → Apps Script<br>
+        2. วาง Code.gs ที่ให้ไว้ใน code-gas.js<br>
+        3. Deploy → New deployment → Web App<br>
+        4. Execute as: Me | Who has access: Anyone<br>
+        5. คัดลอก URL มาวางที่นี่
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeSettings()">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveSettings()">บันทึกและทดสอบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
