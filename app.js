@@ -644,7 +644,7 @@ function showToast(msg, type = 'info') {
 }
 
 // -------- DEMO DATA (remove in production) --------
-if (!localStorage.getItem('students')) {
+if (!localStorage.getItem('students') && !localStorage.getItem('gas_url')) {
   const demo = [
     { rowIndex:'1', class:'ป.2/1', id:'001', firstName:'สมชาย', lastName:'ใจดี' },
     { rowIndex:'2', class:'ป.2/1', id:'002', firstName:'สมหญิง', lastName:'รักเรียน' },
